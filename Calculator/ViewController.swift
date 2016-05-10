@@ -9,73 +9,88 @@
 import UIKit
 
 class ViewController: UIViewController {
-
     @IBOutlet weak var display: UILabel!
+    @IBOutlet weak var historyLabel: UILabel!
     
-    var currentlyTypingNumber = false;
+    var currentlyTypingNumber = false
+    var brain = CalculatorBrain()
     
-    @IBAction func appendDigit(sender: UIButton) {
-        let digit = sender.currentTitle!
+    @IBAction func clearAndReset() {
+        displayValue = 0
+        historyLabel.text = ""
+    }
+    
+    @IBAction func pi() {
         if currentlyTypingNumber {
-            display.text = display.text! + digit
-        } else {
-            display.text = digit
-            currentlyTypingNumber = true;
+            enter()
+        }
+        appendDisplay(String(M_PI))
+        enter()
+    }
+    
+    @IBAction func decimalPoint() {
+        if display.text!.rangeOfString(".") == nil {
+            appendDisplay(".")
         }
     }
     
+    @IBAction func appendDigit(sender: UIButton) {
+        appendDisplay(sender.currentTitle!)
+    }
     
+    func appendDisplay(append: String) {
+        if currentlyTypingNumber {
+            display.text = display.text! + append
+        } else {
+            display.text = append
+            currentlyTypingNumber = true
+        }
+    }
+
     @IBAction func operate(sender: UIButton) {
+        historyLabel.text = historyLabel.text! + sender.currentTitle! + " "
+        
         if currentlyTypingNumber {
             enter()
         }
         
-        let operation = sender.currentTitle!
-        
-        switch operation {
-        case "*": performOperation({ return $0 * $1 })
-        case "/": performOperation({ return $1 / $0 })
-        case "+": performOperation({ return $0 + $1 })
-        case "-": performOperation({ return $1 - $0 })
-        case "sq": performOperation({ return sqrt($0) })
-        default: break
+        if let operation = sender.currentTitle {
+            if let result = brain.performOperation(operation) {
+                displayValue = result
+            } else {
+                displayValue = 0
+            }
         }
     }
     
-    func performOperation(operation: (Double, Double) -> Double) {
-        if operandStack.count >= 2 {
-            displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            operandStack.append(displayValue)
-            print(operandStack)
-        }
-    }
-
-    @nonobjc
-    func performOperation(operation: Double -> Double) {
-        if operandStack.count >= 1 {
-            displayValue = operation(operandStack.removeLast())
-            operandStack.append(displayValue)
-            print(operandStack)
-        }
-    }
-    
-    var operandStack = Array<Double>()
     @IBAction func enter() {
-        operandStack.append(displayValue)
-        currentlyTypingNumber = false;
-        print(operandStack)
+        historyLabel.text = historyLabel.text! + display.text! + " "
+        currentlyTypingNumber = false
+        displayValue = brain.pushOperand(displayValue!)
+//        if let result = brain.pushOperand(displayValue!) {
+//            displayValue = result
+//        } else {
+//            displayValue = 0
+//        }
     }
     
-    var displayValue : Double {
+    var displayValue : Double? {
         get {
-            return Double(display.text!)!
+            if let currDisplay = display.text {
+                return Double(currDisplay)
+            } else {
+                return nil
+            }
+            //return Double(display.text!)!
         }
         
-        set {
-            display.text = "\(newValue)"
+        set(newValue) {
+            if let currDisplay = newValue {
+                display.text = "\(currDisplay)"
+            } else {
+                display.text = ""
+            }
         }
-        
     }
-
 }
 
