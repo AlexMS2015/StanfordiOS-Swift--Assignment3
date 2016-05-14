@@ -15,6 +15,23 @@ class ViewController: UIViewController {
     var currentlyTypingNumber = false
     var brain = CalculatorBrain()
     
+    
+    @IBAction func addVariableM() {
+        if currentlyTypingNumber {
+            enter()
+        }
+
+        brain.pushOperand("M")
+        displayValue = brain.evaluate()
+    }
+    
+    @IBAction func setVariableM() {
+        brain.variableValues["M"] = displayValue
+        currentlyTypingNumber = false
+        displayValue = brain.evaluate()
+    }
+    
+    
     @IBAction func clearAndReset() {
         brain = CalculatorBrain()
         displayValue = 0

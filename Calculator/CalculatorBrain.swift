@@ -37,8 +37,7 @@ class CalculatorBrain: CustomStringConvertible {
         }
     }
     
-    private func evaluate(ops:[Op]) -> (result: Double?, remainingOps: [Op], evalStr: String) {
-        
+    private func evaluate(ops:[Op]) -> (result: Double?, remainingOps: [Op]) {
         if !ops.isEmpty {
             
             var remainingOps = ops
@@ -47,39 +46,53 @@ class CalculatorBrain: CustomStringConvertible {
             switch op {
                 
             case .Operand(let operand):
-                return (operand, remainingOps, "\(operand)")
-                
+                return (operand, remainingOps)
             case .Variable(let variable):
-                let returnString = "\(variable)"
                 if let currVariable = variableValues[variable] {
-                    return (currVariable, remainingOps, returnString)
+                    return (currVariable, remainingOps)
                 } else {
-                    return (nil, remainingOps, returnString)
+                    return (nil, remainingOps)
                 }
-                
-            case .UnaryOperation(let symbol, let operation):
+            case .UnaryOperation(_, let operation):
                 let operandEvaluation = evaluate(remainingOps)
                 if let operand = operandEvaluation.result {
-                    let returnString = "\(symbol)(\(operandEvaluation.evalStr))"
-                    return (operation(operand), operandEvaluation.remainingOps, returnString)
+                    return (operation(operand), operandEvaluation.remainingOps)
                 }
-                
-            case .BinaryOperation(let symbol, let operation):
+            case .BinaryOperation(_, let operation):
                 let op1Evaluation = evaluate(remainingOps)
                 if let op1 = op1Evaluation.result {
                     let op2Evaluation = evaluate(op1Evaluation.remainingOps)
                     if let op2 = op2Evaluation.result {
-                        let returnString = "\(op2Evaluation.evalStr)\(symbol)(\(op1Evaluation.evalStr))"
-                        return (operation(op2, op1), op2Evaluation.remainingOps, returnString)
+                        return (operation(op2, op1), op2Evaluation.remainingOps)
                     } else {
-                        return (nil, ops, "?\(symbol)(\(op1Evaluation.evalStr))")
+                        return (nil, ops)
                     }
                 }
-                
             }
         }
-        
-        return (nil, ops, "")
+        return (nil, ops)
+    }
+    
+    private func describe(ops:[Op]) -> (remainingOps: [Op], evalStr: String) {
+        if !ops.isEmpty {
+            var remainingOps = ops
+            let op = remainingOps.removeLast()
+            
+            switch op {
+            case .Operand(let operand):
+                return (remainingOps, "\(operand)")
+            case .Variable(let variableName):
+                return (remainingOps, "\(variableName)")
+            case .UnaryOperation(let symbol, _):
+                let opEvaluation = describe(remainingOps)
+                return (opEvaluation.remainingOps, "\(symbol)(" + opEvaluation.evalStr + ")")
+            case .BinaryOperation(let symbol, _):
+                let op1Evaluation = describe(remainingOps)
+                let op2Evaluation = describe(op1Evaluation.remainingOps)
+                return (op2Evaluation.remainingOps, op2Evaluation.evalStr + symbol + op1Evaluation.evalStr)
+            }
+        }
+        return (ops, "?")
     }
     
     // MARK: Non-private API
@@ -88,10 +101,21 @@ class CalculatorBrain: CustomStringConvertible {
     
     var description: String {
         get {
-            //var tempOpStack = opStack
-            //var evalStr
+            if opStack.isEmpty {
+                return ""
+            }
             
-            return evaluate(opStack).evalStr
+            var (remainder, evalStr) = describe(opStack)
+            var finalDesc = ""
+            finalDesc += evalStr
+            
+            while !remainder.isEmpty {
+                let (nextRemainder, evalStr) = describe(remainder)
+                finalDesc = evalStr + ", " + finalDesc
+                remainder = nextRemainder
+            }
+            
+            return finalDesc
         }
     }
     
@@ -111,7 +135,7 @@ class CalculatorBrain: CustomStringConvertible {
     }
     
     func evaluate() -> Double? {
-        let (result, remainder, _) = evaluate(opStack)
+        let (result, remainder) = evaluate(opStack)
         print("\(opStack) = \(result) with \(remainder) left over")
         return result
     }
