@@ -16,8 +16,9 @@ class ViewController: UIViewController {
     var brain = CalculatorBrain()
     
     @IBAction func clearAndReset() {
+        brain = CalculatorBrain()
         displayValue = 0
-        historyLabel.text = ""
+        currentlyTypingNumber = false
     }
     
     @IBAction func pi() {
@@ -48,30 +49,18 @@ class ViewController: UIViewController {
     }
 
     @IBAction func operate(sender: UIButton) {
-        historyLabel.text = historyLabel.text! + sender.currentTitle! + " "
-        
         if currentlyTypingNumber {
             enter()
         }
         
         if let operation = sender.currentTitle {
-            if let result = brain.performOperation(operation) {
-                displayValue = result
-            } else {
-                displayValue = 0
-            }
+            displayValue = brain.performOperation(operation)
         }
     }
     
     @IBAction func enter() {
-        historyLabel.text = historyLabel.text! + display.text! + " "
         currentlyTypingNumber = false
         displayValue = brain.pushOperand(displayValue!)
-//        if let result = brain.pushOperand(displayValue!) {
-//            displayValue = result
-//        } else {
-//            displayValue = 0
-//        }
     }
     
     var displayValue : Double? {
@@ -81,14 +70,14 @@ class ViewController: UIViewController {
             } else {
                 return nil
             }
-            //return Double(display.text!)!
         }
         
         set(newValue) {
+            historyLabel.text = " " + brain.description
             if let currDisplay = newValue {
                 display.text = "\(currDisplay)"
             } else {
-                display.text = ""
+                display.text = "Error"
             }
         }
     }
