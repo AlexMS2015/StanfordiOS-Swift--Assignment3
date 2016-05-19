@@ -79,17 +79,15 @@ class CalculatorBrain: CustomStringConvertible {
             let op = remainingOps.removeLast()
             
             switch op {
-            case .Operand(let operand):
-                return (remainingOps, "\(operand)")
-            case .Variable(let variableName):
-                return (remainingOps, "\(variableName)")
-            case .UnaryOperation(let symbol, _):
+            case .Operand(_), .Variable(_):
+                return (remainingOps, op.description)
+            case .UnaryOperation(_, _):
                 let opEvaluation = describe(remainingOps)
-                return (opEvaluation.remainingOps, "\(symbol)(" + opEvaluation.evalStr + ")")
-            case .BinaryOperation(let symbol, _):
+                return (opEvaluation.remainingOps, op.description + "(" + opEvaluation.evalStr + ")")
+            case .BinaryOperation(_, _):
                 let op1Evaluation = describe(remainingOps)
                 let op2Evaluation = describe(op1Evaluation.remainingOps)
-                return (op2Evaluation.remainingOps, op2Evaluation.evalStr + symbol + op1Evaluation.evalStr)
+                return (op2Evaluation.remainingOps, op2Evaluation.evalStr + op.description + "(" + op1Evaluation.evalStr + ")")
             }
         }
         return (ops, "?")
@@ -131,7 +129,6 @@ class CalculatorBrain: CustomStringConvertible {
         learnOp(Op.UnaryOperation("sq", sqrt))
         learnOp(Op.UnaryOperation("cos", cos))
         learnOp(Op.UnaryOperation("sin", sin))
-
     }
     
     func evaluate() -> Double? {
