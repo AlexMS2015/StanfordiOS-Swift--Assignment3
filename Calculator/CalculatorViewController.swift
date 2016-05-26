@@ -8,7 +8,10 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CalculatorViewController: UIViewController {
+    
+    // MARK: Non-private API
+
     @IBOutlet weak var display: UILabel!
     @IBOutlet weak var historyLabel: UILabel!
     
@@ -96,6 +99,27 @@ class ViewController: UIViewController {
             } else {
                 display.text = "Error"
             }
+        }
+    }
+    
+    // MARK: Private API
+    
+    private struct Constants {
+        struct Segues {
+            static let GraphCalcSegue = "Graph Segue"
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let identifier = segue.identifier {
+            switch identifier {
+            case Constants.Segues.GraphCalcSegue:
+                if let graphVC = segue.destinationViewController as? GraphViewController {
+                    graphVC.program = brain.program
+                }
+            default: break
+            }
+            
         }
     }
 }
